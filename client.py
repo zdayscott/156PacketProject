@@ -2,6 +2,7 @@ import socket
 import sys
 import random
 import pickle
+import time
 
 willBid = "We will bid on "
 
@@ -20,7 +21,8 @@ s.connect(('10.0.0.97', port))
 print('Connected to Server')
 
 while True:
-    itemData = pickle.loads(s.recv(4096))
+    data = s.recv(1024)
+    itemData = pickle.loads(data)
     itemName = chooseItem(itemData)
     print((s.recv(1024)).decode('utf-8', 'ignore'))
     print(willBid + itemName+ ". ")
@@ -28,20 +30,29 @@ while True:
     l = True
     while (l):
         choice =(s.recv(1024)).decode('utf-8', 'ignore')
+        print(choice)
         if (choice == "Outbid"):
             print((s.recv(1024)).decode('utf-8', 'ignore'))
             newPrice = pickle.loads(s.recv(1024)) + 1
             if (probBid()):
+                print("Submitted new bid of: " + str(newPrice))
                 s.send(pickle.dumps(newPrice))
-            if (not probBid()):
-                    l = False
+                time.sleep(.5)
+            else:
+                print("Did not submit another bid.")
+                s.send(pickle.dumps(1))
+                time.sleep(.2)
+                print((s.recv(1024)).decode('utf-8', 'ignore'))
+                l = False
         elif(choice == "Winning"):
             print((s.recv(1024)).decode('utf-8', 'ignore'))
         elif(choice == "Won"):
             print((s.recv(1024)).decode('utf-8', 'ignore'))
             l = False
         elif(choice == "Default"):
+            result = s.recv(1024).decode('utf-8', 'ignore')
+            print(result)
             print((s.recv(1024)).decode('utf-8', 'ignore'))
         else: l = False
-        
+    itemData.clear() 
 s.close()
