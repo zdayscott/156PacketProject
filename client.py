@@ -17,7 +17,7 @@ def chooseItem(dict):
 
 s = socket.socket()
 port = 12345
-s.connect(('10.0.0.97', port))
+s.connect(('10.0.0.221', port))
 print('Connected to Server')
 
 while True:
@@ -30,7 +30,6 @@ while True:
     l = True
     while (l):
         choice =(s.recv(1024)).decode('utf-8', 'ignore')
-        print(choice)
         if (choice == "Outbid"):
             print((s.recv(1024)).decode('utf-8', 'ignore'))
             newPrice = pickle.loads(s.recv(1024)) + 1
@@ -51,8 +50,7 @@ while True:
             l = False
         elif(choice == "Default"):
             result = s.recv(1024).decode('utf-8', 'ignore')
-            print(result)
             print((s.recv(1024)).decode('utf-8', 'ignore'))
         else: l = False
-    itemData.clear() 
+    itemData.clear()
 s.close()

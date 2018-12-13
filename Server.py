@@ -2,6 +2,7 @@ import socket
 import pickle
 import random
 import time
+import sys
 '''
 TO DO:
 - fix an syntax errors
@@ -9,6 +10,7 @@ TO DO:
 - get clients and server to connect
 
 '''
+
 
 bidTracker = {} #Dictionary to keep track of the bidding process Stored in {addr: Item Name} Format
 clients = [] #Array to keep track of client information (socket obj, addr)
@@ -50,7 +52,7 @@ def itemWon(itemName, addr):
     tempList = list(itemData[itemName])
     tempList[0] -=1
     itemData[itemName] = tuple(tempList)
-   
+
 
 def appendValue(dictn, key, val):
     if key in dictn:
@@ -71,7 +73,6 @@ def delValue():
 
 #Asks array of clients for their bids
 def solicitBids():
-    print("solicitbids started")
     invite = "Server: You may now bid on an item. "
     global bidTracker
     global clients
@@ -86,7 +87,6 @@ def solicitBids():
 
 #Checks for case where one item was bid on by more than 1 client, returns dict of items: [addr]
 def checkMultBid():
-    print("multibids started")
     global multiBid
     global bidTracker
     ls = []
@@ -138,7 +138,6 @@ def bidWarH(itemName, listAddr, price, leader):
             clients[i][0].send(winning.encode('utf-8'))
             time.sleep(.5)
         elif clients[i][1] in listAddr:
-            print("THE OTHER LOOP HAS RAN")
             clients[i][0].send(notifO.encode('utf-8'))
             time.sleep(.5)
             clients[i][0].send(losing.encode('utf-8'))
@@ -159,14 +158,14 @@ def bidWarH(itemName, listAddr, price, leader):
 s = socket.socket()
 port = 12345
 s.bind(('', port))
-print("Listening for Clients")
+print("Looking for Clients")
 s.listen(5)
 
 #intializes array of clients
 for i in range(0,3):
     c, addr = s.accept()
     clients.append((c,addr))
-    print('Connected to ', addr)
+    print('Connected to: ', addr)
 
 #Block for Data Collection from file
 f = open("input.txt", "r")
@@ -179,23 +178,28 @@ f.close()
 
 #loop until input, once ended transmit all items in winnerInfo
 while True:
-    for i in range(0,len(clients)):
-        c = clients[i][0]
-        print('sending itemdata to ')
-        print(clients[i][1])
-        c.send(pickle.dumps(itemData))
-        time.sleep(.5)
-    solicitBids()
-    checkMultBid()
-    delValue()
-    for key in bidTracker:
-        z = getSocket(key)
-        z.send(notifD.encode('utf-8'))
-        time.sleep(.5)
-        z.send("Server: No one else has bid on your item.".encode('utf-8'))
-        time.sleep(.5)
-        itemWon(bidTracker[key],key)
-    for key in multiBid:
-        bidWarMode(key, multiBid[key])
-    multiBid.clear()
-    bidTracker.clear()
+    try:
+        for i in range(0,len(clients)):
+            c = clients[i][0]
+            print('Sending Item Data to: ')
+            print(clients[i][1])
+            c.send(pickle.dumps(itemData))
+            time.sleep(.5)
+        solicitBids()
+        checkMultBid()
+        delValue()
+        for key in bidTracker:
+            z = getSocket(key)
+            z.send(notifD.encode('utf-8'))
+            time.sleep(.5)
+            z.send("Server: No one else has bid on your item.".encode('utf-8'))
+            time.sleep(.5)
+            itemWon(bidTracker[key],key)
+            for key in multiBid:
+                bidWarMode(key, multiBid[key])
+                multiBid.clear()
+                bidTracker.clear()
+    except KeyboardInterrupt:
+        print("Bidding Ended. Here are the Results: ")
+        print(winnerInfo)
+        sys.exit()
