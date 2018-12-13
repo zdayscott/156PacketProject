@@ -1,8 +1,11 @@
 import socket
 import pickle
 import random
+<<<<<<< HEAD
 import time
 import sys
+=======
+>>>>>>> parent of 95b3a17... Program working
 '''
 TO DO:
 - fix an syntax errors
@@ -22,7 +25,7 @@ notifD = "Default"
 ##FUNCTIONS##
 def getSocket(addr):
     global clients
-    for i in range (0, len(clients)):
+    for i in range (0, len(clients)-1):
         if (clients[i][1]== addr):
             c = clients[i][0]
             return c
@@ -32,15 +35,14 @@ def itemWon(itemName, addr):
     c = None
     global winnerInfo
     global itemData
-    for i in range(0,len(clients)):
-        if (clients[i][1]==addr):
-            c = clients[i][0]
-    c.send("Won".encode('utf-8'))
-    time.sleep(.5)
+    for i in range(0,len(clients)-1):
+        if (client[i][1]==addr):
+            c = client[i][0]
+    c.send(("Won").encode('utf-8'))
     c.send(win.encode('utf-8'))
-    time.sleep(.5)
     if addr not in winnerInfo:
         winnerInfo[addr] = [(itemName, 1)]
+<<<<<<< HEAD
     if addr in winnerInfo:
         ls = winnerInfo[addr]
         for i in range(len(ls)):
@@ -70,44 +72,52 @@ def delValue():
             tempList.append(key)
     for i in range(0, len(tempList)):
         del bidTracker[tempList[i]]
+=======
+    if addr in winnerInfor:
+        list = winnerInfo[addr]
+        for i in range(len(list)):
+            if itemName in list[i]:
+                list[i][1]+=1
+        list.append((itemName, 1))
+    itemData[itemName][0] -= 1
+
+def appendValue(dict, key, val):
+    if key in dict:
+        list= dict[key]
+        if val not in list:
+            dict[key].append(val)
+    dict[key]= [val]
+>>>>>>> parent of 95b3a17... Program working
 
 #Asks array of clients for their bids
 def solicitBids():
     invite = "Server: You may now bid on an item. "
     global bidTracker
     global clients
-    for i in range (0,len(clients)):
+    for i in range (0,len(clients) - 1):
         c = clients[i][0]
         c.send(invite.encode('utf-8'))
-        time.sleep(.5)
         temp = (c.recv(1024)).decode('utf-8', 'ignore') #Will Recv string Item Name and added into bids array
         print(clients[i][1])
         print(temp)
-        bidTracker[clients[i][1]] = temp
+        bidTracker[addr] = temp
 
 #Checks for case where one item was bid on by more than 1 client, returns dict of items: [addr]
 def checkMultBid():
     global multiBid
     global bidTracker
-    ls = []
     for key in bidTracker:
-       if bidTracker[key] not in ls:
-            copy = bidTracker.copy()
-            for k in copy:
-                if bidTracker[key] == copy[k] and key != k:
-                    if bidTracker[key] not in multiBid:
-                        itemName = bidTracker[key]
-                        appendValue(multiBid, itemName, key) #puts item&addr into conflicting bid dict
-                        appendValue(multiBid, itemName, k)
-                        ls.append(itemName)
-                    else:
-                        itemName = bidTracker[key]
-                        if key not in multiBid[itemName]:
-                            multiBid[itemName].append(key)
+        copy = bidTracker.copy()
+        tempTup = bidTracker[key]
+        del copy[key]
+        for k in copy:
+            if (bidTracker[key][0] == copy[k][0]):
+                itemName = bidTracker[key][0]
+                appendValue(multiBid, itemName, key) #puts item&addr into conflicting bid dict
 
 
 def bidWarMode(itemName, listAddr):
-    print(listAddr)
+    msg1="Server: Other clients have bid on " + itemName + "."
     itemWon(itemName, bidWarH(itemName, listAddr, 50, None))
 
 
@@ -123,19 +133,17 @@ def bidWarH(itemName, listAddr, price, leader):
     if (newPrice >= itemData[itemName][1]):
         if clients[i][0] in listAddr:
                 clients[i][0].send(lost.encode('utf-8'))
-                time.sleep(.5)
         return leader
     nleader = listAddr[random.randint(0,len(listAddr)-1)]
     listAddr.remove(nleader)
     if (leader != None):
         listAddr.append(leader)
     newBids = []
-    print(listAddr)
-    for i in range(0, len(clients)):
+    for i in range(0, len(clients)-1):
         if (clients[i][1] == nleader):
             clients[i][0].send(notifW.encode('utf-8'))
-            time.sleep(.5)
             clients[i][0].send(winning.encode('utf-8'))
+<<<<<<< HEAD
             time.sleep(.5)
         elif clients[i][1] in listAddr:
             clients[i][0].send(notifO.encode('utf-8'))
@@ -149,9 +157,18 @@ def bidWarH(itemName, listAddr, price, leader):
             else:
                 clients[i][0].send(lost.encode('utf-8'))
                 time.sleep(.5)
+=======
+        elif clients[i][0] in listAddr:
+                clients[i][0].send(notifO.encode('utf-8'))
+                clients[i][0].send(losing.encode('utf-8'))
+                clients[i][0].send(pickle.dumps(newPrice))
+                clients[i][0].settimeout(5.0)
+                if (pickle.loads(clients[i][0].rcv(1024)) == newPrice+1):
+                    newBids.append(clients[i][1])
+>>>>>>> parent of 95b3a17... Program working
     if (newBids!= []):
         bidWarH(itemName, newBids, newPrice, nleader)
-    else: return nleader
+    return nleader
 
 
 
@@ -162,7 +179,7 @@ print("Looking for Clients")
 s.listen(5)
 
 #intializes array of clients
-for i in range(0,3):
+for i in range(0,2):
     c, addr = s.accept()
     clients.append((c,addr))
     print('Connected to: ', addr)
@@ -178,6 +195,7 @@ f.close()
 
 #loop until input, once ended transmit all items in winnerInfo
 while True:
+<<<<<<< HEAD
     try:
         for i in range(0,len(clients)):
             c = clients[i][0]
@@ -203,3 +221,23 @@ while True:
         print("Bidding Ended. Here are the Results: ")
         print(winnerInfo)
         sys.exit()
+=======
+    for i in range(0,len(clients)):
+        c = clients[i][0]
+        print('sending itemdata to ')
+        print(clients[i][1])
+        c.send(pickle.dumps(itemData))
+    solicitBids()
+    checkMultBid()
+    for key in bidTracker:
+        for k in multiBid:
+            if key not in multiBid[k]:
+                z = getSocket(key)
+                z.send(notifD.encode('utf-8'))
+                z.send(("Server: No one else has bid on your item.").encode('utf-8'))
+                itemWon(bidTacker[key],key)
+    for key in multiBid:
+        bidWarMode(key, multiBid[key])
+    multiBid.clear()
+    bidTracker.clear()
+>>>>>>> parent of 95b3a17... Program working
